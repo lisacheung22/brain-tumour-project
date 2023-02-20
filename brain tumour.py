@@ -7,6 +7,7 @@ from torchvision.transforms import ToTensor
 import matplotlib.pyplot as plt
 import torch.nn as nn
 from torchsummary import summary
+import torch.optim as optim
 
 batch_size = 100
 #importing training and test dataset
@@ -65,13 +66,13 @@ dataloader = torch.utils.DataLoader(training_data, batch_size = batch_size, shuf
 dataloader = torch.utils.DataLoader(test_data, batch_size = batch_size, shuffle=False)
 dataloader = torch.utils.DataLoader(validation_data, batch_size = batch_size, shuffle=False)
 
-#define neural network class 
-class MyModule(nn.Module):
+#define neural network class (CNN model architecture)
+class CNN(nn.Module):
     """Some Information about MyModule"""
     def __init__(self):
-        super(MyModule, self).__init__()
+        super(CNN, self).__init__()
         #first layer 
-        self.conv1 = nn.Conv1d(in_channel = 1, out_channel = 16, groups=1, bias=True, kernel_size=5, padding=0, stride=1)
+        self.conv1 = nn.Conv1d(1, 16, groups=1, bias=True, kernel_size=5, padding=0, stride=1)
         self.relu1 = nn.relu(input, inplace=False)
         self.pool1 = nn.max_pool1d(input, kernel_size = 2, stride=None, padding=0)
 
@@ -100,4 +101,4 @@ class MyModule(nn.Module):
         # Linear function 
         out = self.F(out)
     
-
+model = CNN() # Define the final CNN as 'model'
