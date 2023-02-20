@@ -68,37 +68,43 @@ dataloader = torch.utils.DataLoader(validation_data, batch_size = batch_size, sh
 
 #define neural network class (CNN model architecture)
 class CNN(nn.Module):
-    """Some Information about MyModule"""
     def __init__(self):
         super(CNN, self).__init__()
-        #first layer 
-        self.conv1 = nn.Conv1d(1, 16, groups=1, bias=True, kernel_size=5, padding=0, stride=1)
-        self.relu1 = nn.relu(input, inplace=False)
-        self.pool1 = nn.max_pool1d(input, kernel_size = 2, stride=None, padding=0)
-
-        #second layer 
-        self.conv2 = nn.Conv1d(in_channel = 16, out_channel = 32, groups=1, bias=True, kernel_size=5, padding=0, stride=1)
-        self.relu2 = nn.relu(input, inplace=False)
-        self.pool2 = nn.max_pool2d(input, kernel_size = 2, stride=None, padding=0)
-
-        #initalise cross-entropy
-        self.F = nn.linear(input, weight)
-
+        # 2 Convolution layers
+        self.conv1 = nn.Conv2d(1, 32, kernel_size=3, padding=1)
+        self.bn1 = nn.BatchNorm2d(32)
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
+        self.bn2 = nn.BatchNorm2d(64)
+        
+        # Pooling layers
+        self.pool1 = nn.MaxPool2d(kernel_size=2)
+        self.pool2 = nn.MaxPool2d(kernel_size=2)
+        
+        # Dense layers
+        self.fc1 = nn.Linear(64*64*64, 256)
+        self.fc2 = nn.Linear(256, 1)
+        self.relu = nn.ReLU()
+        self.sigmoid = nn.Sigmoid()
+        
     def forward(self, x):
-        #first layer
-        out = self.conv1(x)
-        out = self.relu1(out)
-        out = self.pool1(out)
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.pool1(x)
         
-        #second layer
-        out = self.conv2(out)
-        out = self.relu2(out)
-        out = self.pool2(out)
+        x = self.conv2(x)
+        x = self.bn2(x)
+        x = self.relu(x)
+        x = self.pool2(x)
         
-        # flatten
-        out = out.view(out.size(0), -1)
+        x = torch.flatten(x, 1)
+        
+        x = self.fc1(x)
+        x = self.relu(x)
+        x = self.fc2(x)
+        x = self.sigmoid(x)
+        
+        return x
 
-        # Linear function 
-        out = self.F(out)
-    
 model = CNN() # Define the final CNN as 'model'
+summary(model, (1, 256, 256)) # get CNN architecture summary for our model
