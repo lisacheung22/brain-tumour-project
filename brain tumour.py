@@ -108,3 +108,10 @@ class CNN(nn.Module):
 
 model = CNN() # Define the final CNN as 'model'
 summary(model, (1, 256, 256)) # get CNN architecture summary for our model
+
+# Define loss functions and optimizer
+criterion = nn.BCELoss()
+optimizer = optim.SGD(model.parameters(), lr=0.01)
+
+# Training the CNN model with our dataset
+number_epoch = 20
