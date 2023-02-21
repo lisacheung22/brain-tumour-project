@@ -1,13 +1,23 @@
 
-#import modules
+#import modules and pytorch libraries
+import numpy as np 
+import pandas as pd 
+import matplotlib.pyplot as plt
+%matplotlib inline
+
 import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision import datasets
 from torchvision.transforms import ToTensor
-import matplotlib.pyplot as plt
 import torch.nn as nn
 from torchsummary import summary
 import torch.optim as optim
+import torch.nn.functional as F
+print("Libraries imported - ready to use PyTorch", torch.__version__)
+
+from sklearn import metrics
+from sklearn.metrics import accuracy_score, confusion_matrix
+from sklearn.model_selection import train_test_split
 
 batch_size = 100
 #importing training and test dataset
@@ -71,9 +81,9 @@ class CNN(nn.Module):
     def __init__(self):
         super(CNN, self).__init__()
         # 2 Convolution layers
-        self.conv1 = nn.Conv2d(1, 32, kernel_size=3, padding=1)
+        self.conv1 = nn.Conv2d(1, 32, kernel_size=3, padding=1, stride=1)
         self.bn1 = nn.BatchNorm2d(32)
-        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, padding=1, stride=1)
         self.bn2 = nn.BatchNorm2d(64)
         
         # Pooling layers
@@ -85,6 +95,8 @@ class CNN(nn.Module):
         self.fc2 = nn.Linear(256, 1)
         self.relu = nn.ReLU()
         self.sigmoid = nn.Sigmoid()
+        
+        self.dropout = nn.Dropout(p=0.15)
         
     def forward(self, x):
         x = self.conv1(x)
@@ -101,13 +113,20 @@ class CNN(nn.Module):
         
         x = self.fc1(x)
         x = self.relu(x)
+        x = self.dropout(x)  # Add dropout layer here to prevent overfitting
         x = self.fc2(x)
         x = self.sigmoid(x)
         
         return x
+    
+device = "cpu"
+if (torch.cuda.is_available()):
+    # if GPU available, use GPU in CNN training.
+    device = "cuda"
 
-model = CNN() # Define the final CNN as 'model'
+model = CNN(num_classes = 2).to(device) # Define the final CNN as 'model'
 summary(model, (1, 256, 256)) # get CNN architecture summary for our model
+print(model)
 
 # Define loss functions and optimizer
 criterion = nn.BCELoss()
