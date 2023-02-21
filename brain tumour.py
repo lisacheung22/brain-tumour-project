@@ -11,7 +11,6 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import datasets
 from torchvision.transforms import ToTensor
 import torch.nn as nn
-from torchsummary import summary
 import torch.optim as optim
 import torch.nn.functional as F
 print("Libraries imported - ready to use PyTorch", torch.__version__)
@@ -80,55 +79,33 @@ dataloader = torch.utils.DataLoader(validation_data, batch_size = batch_size, sh
 
 ##############################################################################
 #define neural network class (CNN model architecture)
-class CNN(nn.Module):
-    def __init__(self):
-        super(CNN, self).__init__()
-        # 2 Convolution layers
-        self.conv1 = nn.Conv2d(1, 32, kernel_size=3, padding=1, stride=1)
-        self.bn1 = nn.BatchNorm2d(32)
-        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, padding=1, stride=1)
-        self.bn2 = nn.BatchNorm2d(64)
-        
-        # Pooling layers
-        self.pool1 = nn.MaxPool2d(kernel_size=2)
-        self.pool2 = nn.MaxPool2d(kernel_size=2)
-        
-        # Dense layers
-        self.fc1 = nn.Linear(64*64*64, 256)
-        self.fc2 = nn.Linear(256, 1)
-        self.relu = nn.ReLU()
-        self.sigmoid = nn.Sigmoid()
-        
-        self.dropout = nn.Dropout(p=0.20)
-        
-    def forward(self, x):
-        x = self.conv1(x)
-        x = self.bn1(x)
-        x = self.relu(x)
-        x = self.pool1(x)
-        
-        x = self.conv2(x)
-        x = self.bn2(x)
-        x = self.relu(x)
-        x = self.pool2(x)
-        
-        x = torch.flatten(x, 1)
-        
-        x = self.fc1(x)
-        x = self.relu(x)
-        x = self.dropout(x)  # Add dropout layer here to prevent overfitting
-        x = self.fc2(x)
-        x = self.sigmoid(x)
-        
-        return x
+CNN = nn.Sequential(
+    nn.Conv2d(1, 32, kernel_size=3, padding=1, stride=1),
+    nn.BatchNorm2d(32),
+    nn.ReLU(),
+    nn.MaxPool2d(kernel_size=2),
     
+    nn.Conv2d(32, 64, kernel_size=3, padding=1, stride=1),
+    nn.BatchNorm2d(64),
+    nn.ReLU(),
+    nn.MaxPool2d(kernel_size=2),
+    
+    nn.Flatten(),
+    
+    nn.Linear(64*64*64, 256),
+    nn.ReLU(),
+    nn.Dropout(p=0.20),
+    
+    nn.Linear(256, 1),
+    nn.Sigmoid()
+)
+
 device = "cpu"
-if (torch.cuda.is_available()):
+if torch.cuda.is_available():
     # if GPU available, use GPU in CNN training.
     device = "cuda"
 
-model = CNN(num_classes = 2).to(device) # Define the final CNN as 'model'
-summary(model, (1, 256, 256)) # get CNN architecture summary for our model
+model = CNN.to(device) # Define the final CNN as 'model'
 print(model)
 
 ##############################################################################
