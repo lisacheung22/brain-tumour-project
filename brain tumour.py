@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd 
 import matplotlib.pyplot as plt
 %matplotlib inline
+import seaborn as sns
 
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -19,6 +20,7 @@ from sklearn import metrics
 from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.model_selection import train_test_split
 
+##############################################################################
 batch_size = 100
 #importing training and test dataset
 training_data = torchvision.datasets.mydata('path/to/root/', 
@@ -76,6 +78,7 @@ dataloader = torch.utils.DataLoader(training_data, batch_size = batch_size, shuf
 dataloader = torch.utils.DataLoader(test_data, batch_size = batch_size, shuffle=False)
 dataloader = torch.utils.DataLoader(validation_data, batch_size = batch_size, shuffle=False)
 
+##############################################################################
 #define neural network class (CNN model architecture)
 class CNN(nn.Module):
     def __init__(self):
@@ -96,7 +99,7 @@ class CNN(nn.Module):
         self.relu = nn.ReLU()
         self.sigmoid = nn.Sigmoid()
         
-        self.dropout = nn.Dropout(p=0.15)
+        self.dropout = nn.Dropout(p=0.20)
         
     def forward(self, x):
         x = self.conv1(x)
@@ -128,9 +131,88 @@ model = CNN(num_classes = 2).to(device) # Define the final CNN as 'model'
 summary(model, (1, 256, 256)) # get CNN architecture summary for our model
 print(model)
 
+##############################################################################
+# Define training function, return loss value
+def train(model, device, train_loader, optimizer, epoch):
+    # Set the model to training mode
+    model.train()
+    train_loss = 0
+    print("Epoch:", epoch)
+    # Process the images in batches
+    for batch_idx, (data, target) in enumerate(train_loader):
+        data, target = data.to(device), target.to(device)       
+        # Reset the optimizer
+        optimizer.zero_grad()
+        # Push the data forward through the model layers
+        output = model(data)        
+        # Get the loss
+        loss = loss_criteria(output, target)
+        # Keep a running total
+        train_loss += loss.item()      
+        # Backpropagate
+        loss.backward()
+        optimizer.step()        
+        # Print metrics so we see some progress
+        print('\tTraining batch {} Loss: {:.6f}'.format(batch_idx + 1, loss.item()))
+            
+    # return average loss for the epoch
+    avg_loss = train_loss / (batch_idx+1)
+    print('Training set: Average loss: {:.6f}'.format(avg_loss))
+    return avg_loss
+##############################################################################
+# Define testing function, return loss value
+def test(model, device, test_loader):
+    # Switch the model to evaluation mode (so we don't backpropagate or drop)
+    model.eval()
+    test_loss = 0
+    correct = 0
+    with torch.no_grad():
+        batch_count = 0
+        for data, target in test_loader:
+            batch_count += 1
+            data, target = data.to(device), target.to(device)            
+            # Get the predicted classes for this batch
+            output = model(data)            
+            # Calculate the loss for this batch
+            test_loss += loss_criteria(output, target).item()            
+            # Calculate the accuracy for this batch
+            _, predicted = torch.max(output.data, 1)
+            correct += torch.sum(target==predicted).item()
+
+    # Calculate the average loss and total accuracy for this epoch
+    avg_loss = test_loss / batch_count
+    print('Validation set: Average loss: {:.6f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+        avg_loss, correct, len(test_loader.dataset),
+        100. * correct / len(test_loader.dataset)))
+    
+    # return average loss for the epoch
+    return avg_loss
+##############################################################################
 # Define loss functions and optimizer
-criterion = nn.BCELoss()
-optimizer = optim.SGD(model.parameters(), lr=0.01)
+loss_criteria = nn.BCELoss()
+optimizer = optim.Adam(model.parameters(), lr=0.01)
 
 # Training the CNN model with our dataset
-number_epoch = 20
+# Track metrics in these arrays
+epoch_nums = []
+training_loss = []
+validation_loss = []
+
+# Train over 20 epochs
+epochs = 20
+print('Training on', device)
+for epoch in range(1, epochs + 1):
+        train_loss = train(model, device, train_loader, optimizer, epoch)
+        test_loss = test(model, device, test_loader)
+        epoch_nums.append(epoch)
+        training_loss.append(train_loss)
+        validation_loss.append(test_loss)
+##############################################################################
+# plot loss values over training epochs
+plt.figure(figsize=(15,15))
+plt.plot(epoch_nums, training_loss)
+plt.plot(epoch_nums, validation_loss)
+plt.xlabel('epoch')
+plt.ylabel('loss')
+plt.legend(['training', 'validation'], loc='upper right')
+plt.show()
