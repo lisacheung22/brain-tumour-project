@@ -7,9 +7,12 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 import torch
+import torchvision
 from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import random_split
 from torchvision import datasets
 from torchvision.transforms import ToTensor
+from torchvision.datasets import ImageFolder
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
@@ -20,26 +23,37 @@ from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.model_selection import train_test_split
 
 ##############################################################################
-batch_size = 100
 #importing training and test dataset
-training_data = torchvision.datasets.mydata('path/to/root/', 
-    train=False, 
-    download=True, 
-    transform=ToTensor())
+transform = transforms.Compose([
+    transforms.Grayscale(num_output_channels=1),  # Convert to grayscale (if needed)
+    transforms.Resize((256, 256)),  # Resize the image to (256, 256) pixels
+    transforms.ToTensor(),  # Convert to a tensor
+    transforms.Normalize((0.5,), (0.5,))  # Normalize the pixel values to [-1, 1]
+])
 
-test_data = torchvision.datasets.mydata('path/to/root/', 
-    train=False, 
-    download=True, 
-    transform=ToTensor())
-
-#split training data into training and validation
-valid_ratio = 0.9 
-n_training_data = int(len(training_data)) * valid_ratio
-n_validation_data = len(training_data) - n_training_data
-
-training_data, validation_data = data.random_split(training_data, n_validation_data, n_validation_data)
+# Load the images from the two folders
+# firstly create new folder named 'data' containing yes_output and no_output files
+image_set = ImageFolder(root='path...', transform=transform)
 
 
+# Define the ratio for each set
+train_ratio = 0.8  # 80% for training
+val_ratio = 0.1    # 10% for validation
+test_ratio = 0.1   # 10% for testing
+
+# Calculate the lengths of each set
+train_len = int(len(image_set) * train_ratio)
+val_len = int(len(image_set) * val_ratio)
+test_len = len(image_set) - train_len - val_len
+
+# Split the dataset using random_split
+train_set, val_set, test_set = random_split(image_set, [train_len, val_len, test_len])
+
+batch_size = 32
+train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, shuffle=True)
+val_loader = torch.utils.data.DataLoader(val_set, batch_size=batch_size)
+test_loader = torch.utils.data.DataLoader(test_set, batch_size=batch_size)
+##############################################################################
 #retrieves our dataset’s features and labels one sample at a time
 #images are stored in img_dir 
 #labels are stored in annotations_file
@@ -106,6 +120,7 @@ if torch.cuda.is_available():
     device = "cuda"
 
 model = CNN.to(device) # Define the final CNN as 'model'
+print("The model will be running on", device, "device\n") 
 print(model)
 
 ##############################################################################
