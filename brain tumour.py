@@ -13,6 +13,7 @@ from torch.utils.data import random_split
 from torchvision import datasets
 from torchvision.transforms import ToTensor
 from torchvision.datasets import ImageFolder
+import torchvision.transforms as transforms
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
