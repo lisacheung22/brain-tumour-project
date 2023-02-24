@@ -1,10 +1,10 @@
-
 #import modules and pytorch libraries
 import numpy as np 
 import pandas as pd 
 import matplotlib.pyplot as plt
 %matplotlib inline
 import seaborn as sns
+import random
 
 import torch
 import torchvision
@@ -14,6 +14,7 @@ from torchvision import datasets
 from torchvision.transforms import ToTensor
 from torchvision.datasets import ImageFolder
 import torchvision.transforms as transforms
+from torchsummary import summary
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
@@ -22,7 +23,6 @@ print("Libraries imported - ready to use PyTorch", torch.__version__)
 from sklearn import metrics
 from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.model_selection import train_test_split
-
 ##############################################################################
 #importing training and test dataset
 transform = transforms.Compose([
@@ -34,8 +34,7 @@ transform = transforms.Compose([
 
 # Load the images from the two folders
 # firstly create new folder named 'data' containing yes_output and no_output files
-image_set = ImageFolder(root='path...', transform=transform)
-
+image_set = ImageFolder(root='.../Br35H/data', transform=transform)
 
 # Define the ratio for each set
 train_ratio = 0.8  # 80% for training
@@ -54,6 +53,34 @@ batch_size = 32
 train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, shuffle=True)
 val_loader = torch.utils.data.DataLoader(val_set, batch_size=batch_size)
 test_loader = torch.utils.data.DataLoader(test_set, batch_size=batch_size)
+##############################################################################
+# Here I display one random image from image_set to check
+number = random.randint(0, 2999)
+image, label = image_set[number]
+image = np.transpose(image, (1, 2, 0))
+
+# Display the image in grayscale
+plt.imshow(image.squeeze(), cmap='gray')
+plt.title(f"Label: {label}")
+plt.axis('off')
+plt.show()
+print(f"Image_No: {number}")
+##############################################################################
+# Display 5 random images from train_loader in original form
+# To confirm we have successfully loaded images ready for training
+def unnormalize(img):
+    img = img / 2 + 0.5  # unnormalize the pixel values
+    img = img.numpy()
+    img = np.transpose(img, (1, 2, 0))  # transpose the dimensions
+    return img
+
+images, labels = next(iter(train_loader))
+
+# Visualize the first 5 images and their labels
+for i in range(5):
+    plt.imshow(unnormalize(images[i]), cmap='gray')
+    plt.title('Label: {}'.format(labels[i]))
+    plt.show()
 ##############################################################################
 #retrieves our dataset’s features and labels one sample at a time
 #images are stored in img_dir 
@@ -122,8 +149,10 @@ if torch.cuda.is_available():
 
 model = CNN.to(device) # Define the final CNN as 'model'
 print("The model will be running on", device, "device\n") 
-print(model)
 
+# get model layer summary
+print(model)
+summary(CNN, (1, 256, 256))
 ##############################################################################
 # Define training function, return loss value
 def train(model, device, train_loader, optimizer, epoch):
