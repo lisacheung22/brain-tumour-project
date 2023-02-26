@@ -82,44 +82,6 @@ for i in range(5):
     plt.title('Label: {}'.format(labels[i]))
     plt.show()
 ##############################################################################
-#retrieves our dataset’s features and labels one sample at a time
-#images are stored in img_dir 
-#labels are stored in annotations_file
-class MyDataset(torch.utils.data.Dataset):
-    """Some Information about MyDataset"""
-    def __init__(self, annotations_file, mydata, transform=None, target_transform=None):
-        self.img_labels = pd.read.csv(annotations_file)
-        self.mydata = mydata
-        self.transform = transform
-        self.target_transfom = target_transform
-        super(MyDataset, self).__init__()
-
-    def __len__(self):
-        return len(self.img_labels)
-    
-    #finds images by index and coverts into tensor using read image and matches the corresponding label, 
-    #calls the transform function if possible
-    def __getitem__(self, index):
-        img_path = os.path.join(self.mydata, self.img_labels.iloc[idx, 0])
-        image = read_image(img_path)
-        if self.transform:
-            image = self.transform(image)
-        if self.target_transform:
-            label = self.target_transform(label)
-        return image, label
-    
-#labelling our dataset 
-labels_map = {
-    0:"tumour", 
-    1:"no tumour"
-}
-
-#gets dataset feature and labels one sample at a time
-dataloader = torch.utils.DataLoader(training_data, batch_size = batch_size, shuffle=True)
-dataloader = torch.utils.DataLoader(test_data, batch_size = batch_size, shuffle=False)
-dataloader = torch.utils.DataLoader(validation_data, batch_size = batch_size, shuffle=False)
-
-##############################################################################
 #define neural network class (CNN model architecture)
 CNN = nn.Sequential(
     nn.Conv2d(1, 32, kernel_size=3, padding=1, stride=1),
