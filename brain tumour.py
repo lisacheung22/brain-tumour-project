@@ -63,10 +63,11 @@ def convert_to_numpy(loader):
     # Reshape the data to (batch_size, height, width, channels)
     data = data.reshape(-1, 256, 256, 1)
     return data, labels
-##############################################################################
+
 x_train, y_train = convert_to_numpy(train_loader)
 x_val, y_val = convert_to_numpy(val_loader)
 x_test, y_test = convert_to_numpy(test_loader)
+##############################################################################
 # Here I display one random image from image_set to check
 number = random.randint(0, 2999)
 image, label = image_set[number]
@@ -102,7 +103,6 @@ model = Sequential([
     BatchNormalization(),
     MaxPooling2D((2, 2)),
     Dropout(0.25),
-
 
 # Convolutional layer 2
     Conv2D(32, (3, 3), padding='same', activation = 'relu', kernel_initializer = 'he_uniform'),
@@ -176,8 +176,6 @@ def convert_to_numpy(pred_path, transform):
     return imgs
 
 pred_imgs = convert_to_numpy(pred_path, transform)
-
-import matplotlib.pyplot as plt
 
 # Select 4 random indices from the loaded images:
 random_indices = np.random.choice(len(pred_imgs), size=4, replace=False)
