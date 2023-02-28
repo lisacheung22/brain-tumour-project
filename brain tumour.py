@@ -21,11 +21,15 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Flatten, Conv2D, MaxPooling2D, BatchNormalization, Activation
 from tensorflow.keras.layers import Dropout
 ##############################################################################
+# run this cell if your jupyter notebook kernel is died
+import os
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
+##############################################################################
 #importing training and test dataset
 transform = transforms.Compose([
     transforms.Grayscale(num_output_channels=1),  # Convert to grayscale (if needed)
     transforms.Resize((256, 256)),  # Resize the image to (256, 256) pixels
-    transforms.ToTensor(),  # Convert to a tensor
+    transforms.ToTensor()  # Convert to a tensor
 ])
 
 # Load the images from the two folders
@@ -150,8 +154,32 @@ model.save('tumour_detector.h5')
 # OR YOU CAN LOAD THE TRAINED MODEL FOR ANALYSIS when reopen python
 model = tf.keras.models.load_model('tumour_detector.h5')
 ##############################################################################
-# Get prediction images from pred_output folder
-import os
+# visualise our model's relative confidence (decision making) on testing images
+num_test_images = x_test.shape[0]
+
+random_inx = np.random.choice(num_test_images, 4)
+random_test_images = x_test[random_inx, ...]
+random_test_labels = y_test[random_inx, ...]
+
+predictions = model.predict(random_test_images)
+complement = np.ones_like(predictions) - predictions
+predictions = np.concatenate((complement, predictions), axis=1)
+
+fig, axes = plt.subplots(4, 2, figsize=(16, 12))
+fig.subplots_adjust(hspace=0.4, wspace=-0.2)
+
+for i, (prediction, image, label) in enumerate(zip(predictions, random_test_images, random_test_labels)):
+    axes[i, 0].imshow(np.squeeze(image), cmap = 'gray')
+    axes[i, 0].get_xaxis().set_visible(False)
+    axes[i, 0].get_yaxis().set_visible(False)
+    axes[i, 0].text(10., -1.5, f'Class {label}')
+    axes[i, 1].bar(np.arange(len(prediction)), prediction)
+    axes[i, 1].set_xticks(np.arange(len(prediction)))
+    axes[i, 1].set_title(f"Categorical distribution. Model prediction: {np.argmax(prediction)}")
+    
+plt.show()
+##############################################################################
+# Get prediction images from pred_output folder and visualise CNN decision making
 from PIL import Image
 
 pred_path = 'brain-tumour-project/Br35H/pred_output'
@@ -177,24 +205,25 @@ def convert_to_numpy(pred_path, transform):
 
 pred_imgs = convert_to_numpy(pred_path, transform)
 
-# Select 4 random indices from the loaded images:
-random_indices = np.random.choice(len(pred_imgs), size=4, replace=False)
+num_test_images = pred_imgs.shape[0]
 
-# Predict the class probabilities for the selected images:
-selected_imgs = pred_imgs[random_indices]
-predictions = model.predict(selected_imgs)
+random_inx = np.random.choice(num_test_images, 4)
+random_test_images = pred_imgs[random_inx, ...]
 
-# Define a function to display the image and its predicted category:
-def display_image_with_prediction(ax, image, prediction):
-    ax.imshow(image, cmap='gray')
-    if prediction > 0.5:
-        ax.set_title('Predicted: Tumor')
-    else:
-        ax.set_title('Predicted: No tumor')
-    ax.axis('off')
+predictions = model.predict(random_test_images)
+complement = np.ones_like(predictions) - predictions
+predictions = np.concatenate((complement, predictions), axis=1)
 
-# Display the selected images and their predicted categories:
-fig, axs = plt.subplots(1, 4, figsize=(15, 5))
-for i, index in enumerate(random_indices):
-    display_image_with_prediction(axs[i], imgs[index], predictions[i])
+fig, axes = plt.subplots(4, 2, figsize=(16, 12))
+fig.subplots_adjust(hspace=0.4, wspace=-0.2)
+
+for i, (prediction, image) in enumerate(zip(predictions, random_test_images)):
+    axes[i, 0].imshow(np.squeeze(image), cmap = 'gray')
+    axes[i, 0].get_xaxis().set_visible(False)
+    axes[i, 0].get_yaxis().set_visible(False)
+    axes[i, 1].bar(np.arange(len(prediction)), prediction)
+    axes[i, 1].set_xticks(np.arange(len(prediction)))
+    axes[i, 1].set_title(f"Categorical distribution. Model prediction: {np.argmax(prediction)}")
+    
 plt.show()
+##############################################################################
