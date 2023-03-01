@@ -176,11 +176,15 @@ for i, (prediction, image, label) in enumerate(zip(predictions, random_test_imag
     axes[i, 1].bar(np.arange(len(prediction)), prediction)
     axes[i, 1].set_xticks(np.arange(len(prediction)))
     axes[i, 1].set_title(f"Categorical distribution. Model prediction: {np.argmax(prediction)}")
-    
+
+for ax in axes[:,1]:
+    ax.set_ylim([0,1])
+
 plt.show()
 ##############################################################################
 # Get prediction images from pred_output folder and visualise CNN decision making
 from PIL import Image
+import os
 
 pred_path = 'brain-tumour-project/Br35H/pred_output'
 img_filenames = os.listdir(pred_path)
@@ -224,6 +228,9 @@ for i, (prediction, image) in enumerate(zip(predictions, random_test_images)):
     axes[i, 1].bar(np.arange(len(prediction)), prediction)
     axes[i, 1].set_xticks(np.arange(len(prediction)))
     axes[i, 1].set_title(f"Categorical distribution. Model prediction: {np.argmax(prediction)}")
+
+for ax in axes[:,1]:
+    ax.set_ylim([0,1])
     
 plt.show()
 ##############################################################################
