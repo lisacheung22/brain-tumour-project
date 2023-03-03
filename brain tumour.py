@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 %matplotlib inline
 import seaborn as sns
 import random
+random.seed(100)
 
 import torch
 import torchvision
@@ -14,12 +15,12 @@ from torchvision import datasets
 from torchvision.transforms import ToTensor
 from torchvision.datasets import ImageFolder
 import torchvision.transforms as transforms
-print("Libraries imported - ready to use PyTorch", torch.__version__)
 
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Flatten, Conv2D, MaxPooling2D, BatchNormalization, Activation
 from tensorflow.keras.layers import Dropout
+print(tf.__version__)
 ##############################################################################
 # run this cell if your jupyter notebook kernel is died
 import os
@@ -34,7 +35,7 @@ transform = transforms.Compose([
 
 # Load the images from the two folders
 # firstly create new folder named 'data' containing yes_output and no_output files
-image_set = ImageFolder(root='brain-tumour-project/Br35H/data', transform=transform)
+image_set = ImageFolder(root='Br35H/data', transform=transform)
 
 # Define the ratio for each set
 train_ratio = 0.8  # 80% for training
@@ -135,18 +136,29 @@ test_loss, test_acc = model.evaluate(x_test, y_test, batch_size=32)
 print('Test loss:', test_loss)
 print('Test accuracy:', test_acc)
 ##############################################################################
-# Get the accuracy values and plot accuracy of train/val data over epochs
+# plot accuracy and loss over training epochs
 accuracy = history.history['accuracy']
 val_accuracy = history.history['val_accuracy']
+loss = history.history['loss']
+val_loss = history.history['val_loss']
 
-# Plot the accuracy curves
+# Plot the accuracy and loss curves side by side
+plt.subplot(1, 2, 1) # Create the left subplot
 plt.plot(accuracy, label='Training Accuracy')
 plt.plot(val_accuracy, label='Validation Accuracy')
-plt.legend()
 plt.title('Accuracy Curves')
 plt.xlabel('Epochs')
 plt.ylabel('Accuracy')
-plt.show()
+
+plt.subplot(1, 2, 2) # Create the right subplot
+plt.plot(loss, label='Training')
+plt.plot(val_loss, label='Validation')
+plt.legend()
+plt.title('Loss Curves')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+
+plt.show() # Show the plots
 ##############################################################################
 # Save the entire model to a HDF5 file
 model.save('tumour_detector.h5')
@@ -182,11 +194,39 @@ for ax in axes[:,1]:
 
 plt.show()
 ##############################################################################
+# Confusion matrix of testing set to get an overall picture
+from sklearn.metrics import accuracy_score, confusion_matrix
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+
+predictions = model.predict(x_test)
+predictions = [1 if x>0.5 else 0 for x in predictions]
+
+accuracy = accuracy_score(y_test, predictions)
+print('Val Accuracy = %.2f' % accuracy)
+
+confusion_mtx = confusion_matrix(y_test, predictions) 
+disp = ConfusionMatrixDisplay(confusion_matrix=confusion_mtx)
+disp.plot()
+
+plt.show()
+##############################################################################
+# Confusion matrix of validation set used in the training validation
+predictions = model.predict(x_val)
+predictions = [1 if x>0.5 else 0 for x in predictions]
+
+accuracy = accuracy_score(y_val, predictions)
+print('Val Accuracy = %.3f' % accuracy)
+
+confusion_mtx = confusion_matrix(y_val, predictions) 
+disp = ConfusionMatrixDisplay(confusion_matrix=confusion_mtx)
+disp.plot()
+plt.show()
+##############################################################################
 # Get prediction images from pred_output folder and visualise CNN decision making
 from PIL import Image
 import os
 
-pred_path = 'brain-tumour-project/Br35H/pred_output'
+pred_path = 'Br35H/pred_output'
 img_filenames = os.listdir(pred_path)
 img_width, img_height = 256, 256
 
@@ -232,5 +272,23 @@ for i, (prediction, image) in enumerate(zip(predictions, random_test_images)):
 for ax in axes[:,1]:
     ax.set_ylim([0,1])
     
+plt.show()
+##############################################################################
+# Read in image folders containing 800 images with positve tumours and get confusion matrix
+path = 'Br35H/All-yes'
+img_filenames = os.listdir(path)
+img_width, img_height = 256, 256
+all_yes_images = convert_to_numpy(path, transform)
+
+predictions = model.predict(all_yes_images)
+predictions = [1 if x>0.5 else 0 for x in predictions]
+answers = [1]*len(all_yes_images)
+
+accuracy = accuracy_score(answers, predictions)
+print('Testing Accuracy = %.3f' % accuracy)
+
+confusion_mtx = confusion_matrix(answers, predictions) 
+disp = ConfusionMatrixDisplay(confusion_matrix=confusion_mtx)
+disp.plot()
 plt.show()
 ##############################################################################
