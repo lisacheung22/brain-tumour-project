@@ -1,52 +1,18 @@
-# Project Core
-In this project we worked to define a machine learning algorithm called convolutional neural network (CNN) to classify whether a MRI brain scan contains late-stage tumours. Our project core is to train a CNN model that classifies 2D images into either with tumours or without tumours to determine how accuracy can CNN be in recognizing abnormal MRI scans. For the project core, we used Brats MRI dataset containing 3000 images, in which we used 2400 for training our CNN model, 300 for validation during training, and 300 for testing performance. Dataset images are processed to be all grayscale with 256x256 pixels before feeding into Tensorflow CNN model during training.
+# Project Core Summary
+In this project we worked to define a machine learning algorithm called convolutional neural network (CNN) to classify whether a MRI brain scan contains late-stage tumours. Our project core is to train a CNN model that classifies 2D images into either with tumours or without tumours to determine how accuracy can CNN be in recognizing abnormal MRI scans. For the project core, we used Brats MRI dataset containing 3000 images, in which we used 2400 for training our CNN model, 300 for validation during training, and 300 for testing performance. Dataset images are processed to be all grayscale with 256x256 pixels before feeding into Tensorflow CNN model during training. In the final epoch, it achieves 97.67% accuracy and 0.08 loss on validation dataset (training acc: 99.75%, loss: 0.0117). Then in model evaluation, CNN algorithm achieves 99% accuracy on 300 testing images. Our training and analysis used a global random seed of 147 to ensure reproducibility.
 
-Our model architecture deploys 11 layers in total, including 2 convolution layers each with 32 kernels to extract image features, 2 maxpooling layers and 2 dropout layers (rate = 0.25 and 0.5) to prevent overfitting. Model architecture is shown below: 
+### CNN model architecture:
+In total we used 11 layers including 2 Convolutional layers to extract visual information, 2 Maxpooling layers and Dropout layers to prevent overfitting and reduce computational loads. Then, images are flattened and connected to dense layer 1 with 512 neurons. The final output layer has only 1 neuron, in which an image will be classified as without tumour if final value is below 0.5, and vice versa. The model was compiled with SGD optimizer (lr=0.01) and binary cross entropy to calculate loss function during training. 
+![Model architecture](Br35H/project_output/model.png)
 
-Model: "sequential"
-_________________________________________________________________
-Layer                     
+### Training with 2400 images over 14 epochs:
+2400 images are fed into CNN to train for 14 epochs with batch size 32. The CNN model training converges quite quickly without vibrations. The final val_loss is really close to train loss (0.0137 vs 0.080, and the final validation accuracy is 97.67%.
+![acc+loss curves over epochs](Br35H/project_output/training.png)
 
-=================================================================
- conv2d (Conv2D)             (None, 256, 256, 32)      320       
-                                                                 
- batch_normalization (BatchN  (None, 256, 256, 32)     128       
- ormalization)                                                   
-                                                                 
- max_pooling2d (MaxPooling2D  (None, 128, 128, 32)     0         
- )                                                               
-                                                                 
- dropout (Dropout)           (None, 128, 128, 32)      0         
-                                                                 
- conv2d_1 (Conv2D)           (None, 128, 128, 32)      9248      
-                                                                 
- batch_normalization_1 (Batc  (None, 128, 128, 32)     128       
- hNormalization)                                                 
-                                                                 
- max_pooling2d_1 (MaxPooling  (None, 64, 64, 32)       0         
- 2D)                                                             
-                                                                 
- flatten (Flatten)           (None, 131072)            0         
-                                                                 
- dense (Dense)               (None, 512)               67109376  
-                                                                 
- dropout_1 (Dropout)         (None, 512)               0         
-                                                                 
- dense_1 (Dense)             (None, 1)                 513       
-                                                                 
-=================================================================
-Total params: 67,119,713
-Trainable params: 67,119,585
-Non-trainable params: 128
-_________________________________________________________________
+### Visualise model evaluation result with confusion matrix (99% accuracy):
+This image quantified successful and wrong classifications on testing images. Only 3 images are wrongly classified, and they are all false positive, which are desirable in tumour diagnosis!
+![confusion matrix](Br35H/project_output/conf_mtx.png)
 
-Our model was compiled with SGD optimizer and monitored with binary cross entropy loss function during training. The training process went for 14 epochs over 2400 images and took around 10 minutes. The batch size used in training was 32.
-
-In the final epoch, it achieves 97.66% accuracy on validation data:
-Epoch 14/14
-75/75 [==============================] - 51s 673ms/step - loss: 0.0117 - accuracy: 0.9975 - val_loss: 0.0800 - val_accuracy: 0.9767
-
-Then during model evaluation on 300 testing images, it achieves 99% accuracy on testing images:
-10/10 [==============================] - 1s 130ms/step - loss: 0.0470 - accuracy: 0.9900
-
-
+### Visualise model decision making on several images. y-axis = relative confidence 0-1
+This image visualises how our CNN made decisions on some of images. Y axis values represent model confidence on that choice. 
+![confidence](Br35H/project_output/conf2.png)
