@@ -231,11 +231,7 @@ plt.show()
 from PIL import Image
 import os
 
-pred_path = 'Br35H/pred_output'
-img_filenames = os.listdir(pred_path)
-img_width, img_height = 256, 256
-
-def convert_to_numpy(pred_path, transform):
+def read_images(pred_path, transform):
     img_filenames = os.listdir(pred_path)
     img_width, img_height = 256, 256
     
@@ -252,7 +248,11 @@ def convert_to_numpy(pred_path, transform):
     imgs = imgs.reshape(-1, img_width, img_height, 1)
     return imgs
 
-pred_imgs = convert_to_numpy(pred_path, transform)
+# Get prediction images from pred_output image folder 
+pred_path = 'Br35H/pred_output'
+img_filenames = os.listdir(pred_path)
+img_width, img_height = 256, 256
+pred_imgs = read_images(pred_path, transform)
 
 num_test_images = pred_imgs.shape[0]
 
@@ -279,21 +279,25 @@ for ax in axes[:,1]:
     
 plt.show()
 ##############################################################################
-# Read in image folders containing 800 images with positve tumours and get confusion matrix
-path = 'Br35H/All-yes'
-img_filenames = os.listdir(path)
-img_width, img_height = 256, 256
-all_yes_images = convert_to_numpy(path, transform)
+# Read in whole dataset with 3000 images (yes and no) and assess accuracy using confusion matrix
+testing_set = ImageFolder(root='Br35H/Testing', transform=transform)
 
-predictions = model.predict(all_yes_images)
+batch_size = 32
+testing = torch.utils.data.DataLoader(testing_set, batch_size=batch_size)
+
+x_testing, y_testing = convert_to_numpy(testing)
+len(y_testing)
+
+test_loss, test_acc = model.evaluate(x_testing, y_testing)
+
+predictions = model.predict(x_testing)
+
 predictions = [1 if x>0.5 else 0 for x in predictions]
-answers = [1]*len(all_yes_images)
 
-accuracy = accuracy_score(answers, predictions)
+accuracy = accuracy_score(y_testing, predictions)
 print('Testing Accuracy = %.3f' % accuracy)
 
-confusion_mtx = confusion_matrix(answers, predictions) 
+confusion_mtx = confusion_matrix(y_testing, predictions) 
 disp = ConfusionMatrixDisplay(confusion_matrix=confusion_mtx)
-disp.plot()
-plt.show()
+disp = disp.plot(cmap=plt.cm.Blues)
 ##############################################################################
