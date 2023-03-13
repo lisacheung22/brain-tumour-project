@@ -90,20 +90,20 @@ plt.axis('off')
 plt.show()
 print(f"Image_No: {number}")
 ##############################################################################
-# Display 5 random images from train_loader in original form
-# To confirm we have successfully loaded images ready for training
-def unnormalize(img):
-    img = img.numpy()
-    img = np.transpose(img, (1, 2, 0))  # transpose the dimensions
-    return img
+# Display 10 random original images
+n_samples = 10
+indices = np.random.randint(x_train.shape[2], size=n_samples)
 
-images, labels = next(iter(train_loader))
+fig, axes = plt.subplots(2, 5, figsize=(15, 6))
+for i, idx in enumerate(indices):
+    row = i // 5
+    col = i % 5
+    axes[row, col].imshow(x_train[idx], cmap='gray')
+    axes[row, col].set_title(y_train[idx])
+    axes[row, col].axis('off')
 
-# Visualize the first 5 images and their labels
-for i in range(5):
-    plt.imshow(unnormalize(images[i]), cmap='gray')
-    plt.title('Label: {}'.format(labels[i]))
-    plt.show()
+plt.tight_layout()
+plt.show()
 ##############################################################################
 #define neural network class (CNN model architecture)
 model = Sequential([
